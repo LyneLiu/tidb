@@ -836,10 +836,10 @@ func (e *InsertValues) getRow(cols []*table.Column, list []expression.Expression
 	vals := make([]types.Datum, len(list))
 	for i, expr := range list[0:len(e.Columns)] {
 		val, err := expr.Eval(nil)
-		vals[i] = val
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
+		vals[i] = val
 	}
 	datums, err := e.fillRowData(cols, vals, false)
 	if err != nil {

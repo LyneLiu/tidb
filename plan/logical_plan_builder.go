@@ -1012,6 +1012,7 @@ func (b *planBuilder) buildDataSource(tn *ast.TableName) LogicalPlan {
 		tableInfo:      tableInfo,
 		statisticTable: statisticTable,
 		DBName:         schemaName,
+		GenValues:      make(map[int]expression.Expression, 0),
 	}.init(b.allocator, b.ctx)
 
 	b.visitInfo = appendVisitInfo(b.visitInfo, mysql.SelectPriv, schemaName.L, tableInfo.Name.L, "")
@@ -1035,10 +1036,23 @@ func (b *planBuilder) buildDataSource(tn *ast.TableName) LogicalPlan {
 			TblName:  tableInfo.Name,
 			DBName:   schemaName,
 			RetType:  &col.FieldType,
-			Position: i,
+			Position: i, // NOTE: Position can be discontinuous?
 			ID:       col.ID})
 	}
 	p.SetSchema(schema)
+	// for not stored generated column
+	for _, col := range schema.Columns {
+		idx := col.Position
+		colInfo := tableInfo.Columns[idx]
+		if len(colInfo.GeneratedExprString) != 0 && !colInfo.GeneratedStored {
+			expr, _, err := b.rewrite(tbl.Cols()[idx].GeneratedExpr, p, nil, true)
+			if err != nil {
+				b.err = errors.Trace(err)
+				return nil
+			}
+			p.GenValues[idx] = expr
+		}
+	}
 	return p
 }
 
