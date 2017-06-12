@@ -254,6 +254,14 @@ func (p *Insert) ResolveIndices() {
 }
 
 // ResolveIndices implements Plan interface.
+func (p *DataSource) ResolveIndices() {
+	p.basePlan.ResolveIndices()
+	for _, expr := range p.GenValues {
+		expr.ResolveIndices(p.Schema())
+	}
+}
+
+// ResolveIndices implements Plan interface.
 func (p *basePlan) ResolveIndices() {
 	for _, child := range p.children {
 		child.ResolveIndices()

@@ -975,7 +975,7 @@ func (e *XSelectTableExec) Next() (*Row, error) {
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
-		// TODO: check here.
+		// Calculate generated columns here.
 		for i, col := range e.Columns {
 			if len(col.GeneratedExprString) != 0 && !col.GeneratedStored {
 				val, err := e.GenValues[i].Eval(values)
