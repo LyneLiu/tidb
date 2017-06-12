@@ -833,8 +833,9 @@ func (e *InsertValues) getRows(cols []*table.Column) (rows [][]types.Datum, err 
 }
 
 func (e *InsertValues) getRow(cols []*table.Column, list []expression.Expression) ([]types.Datum, error) {
-	vals := make([]types.Datum, len(list))
-	for i, expr := range list[0:len(e.Columns)] {
+	length := len(e.Lists[0]) // It's length of elements coming from values(...) explicitly.
+	vals := make([]types.Datum, length)
+	for i, expr := range list[0:length] {
 		val, err := expr.Eval(nil)
 		if err != nil {
 			return nil, errors.Trace(err)
@@ -849,7 +850,7 @@ func (e *InsertValues) getRow(cols []*table.Column, list []expression.Expression
 	// which has same schema with e.Table. And, we can eval them one
 	// by one, because they can only refer generated columns occurring
 	// earilier in the table.
-	for i, expr := range list[len(e.Columns):] {
+	for i, expr := range list[length:] {
 		val, err := expr.Eval(datums)
 		if err != nil {
 			return nil, errors.Trace(err)

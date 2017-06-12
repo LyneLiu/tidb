@@ -995,6 +995,7 @@ func (b *executorBuilder) buildTableReader(v *plan.PhysicalTableReader) Executor
 		desc:      ts.Desc,
 		ranges:    ts.Ranges,
 		columns:   ts.Columns,
+		GenValues: ts.GenValues,
 	}
 
 	for i := range v.Schema().Columns {

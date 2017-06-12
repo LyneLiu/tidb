@@ -846,6 +846,7 @@ type XSelectTableExec struct {
 	startTS      uint64
 	orderByList  []*tipb.ByItem
 
+	// GenValues is for calculating virtual generated columns.
 	GenValues map[int]expression.Expression
 
 	/*

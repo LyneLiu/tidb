@@ -1108,6 +1108,30 @@ func (s *testSuite) TestGeneratedColumnWrite(c *C) {
 	c.Assert(terr.Code(), Equals, terror.ErrCode(mysql.ErrBadGeneratedColumn))
 }
 
+// TestGeneratedColumnRead tests select generated columns from table.
+// They should be calculated from their generation expressions.
+func (s *testSuite) TestGeneratedColumnRead(c *C) {
+	defer func() {
+		s.cleanEnv(c)
+		testleak.AfterTest(c)()
+	}()
+	tk := testkit.NewTestKit(c, s.store)
+	tk.MustExec("use test")
+	tk.MustExec(`CREATE TABLE test_gv_read(a int primary key, b int, c int as (a+b), d int as (a*b) stored)`)
+
+	// Insert only column a and b, leave c and d be calculated from them.
+	tk.MustExec(`INSERT INTO test_gv_read (a, b) values (0, null)`)
+	tk.MustExec(`INSERT INTO test_gv_read (a, b) values (1, 2)`)
+	tk.MustExec(`INSERT INTO test_gv_read (a, b) values (3, 4)`)
+	// tk.MustExec(`INSERT INTO test_gv_read set a = 5, b = 6`)
+
+	result := tk.MustQuery(`SELECT * FROM test_gv_read ORDER BY a`)
+	result.Check(testkit.Rows(`0 <nil> <nil> <nil>`, `1 2 3 2`, `3 4 7 12`))
+
+	// result = tk.MustQuery(`SELECT * FROM test_gv_read WHERE c = 7 ORDER BY a`)
+	// result.Check(testkit.Rows(`3 4 7 12`))
+}
+
 func (s *testSuite) TestToPBExpr(c *C) {
 	defer func() {
 		s.cleanEnv(c)
