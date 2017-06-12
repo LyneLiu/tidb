@@ -33,7 +33,7 @@ func getDefaultCharsetAndCollate() (string, string) {
 //   Because some ColumnInfos have attribute `GeneratedExprString`,
 //   we need to parse that string into ast.ExprNode.
 func ParseExpression(expr string) (node ast.ExprNode, err error) {
-	logger.Errorf("ParseExpression is called\n")
+	logger.Infof("ParseExpression is called\n")
 	expr = fmt.Sprintf("select %s", expr)
 	charset, collation := getDefaultCharsetAndCollate()
 	stmts, err := New().Parse(expr, charset, collation)
