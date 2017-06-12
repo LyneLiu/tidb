@@ -869,7 +869,7 @@ func (e *InsertValues) getRow(cols []*table.Column, list []expression.Expression
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
-		offset := cols[len(e.Columns)+i].Offset
+		offset := cols[length+i].Offset
 		datums[offset] = val
 	}
 	return datums, nil

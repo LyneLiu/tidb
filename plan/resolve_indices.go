@@ -250,6 +250,9 @@ func (p *Insert) ResolveIndices() {
 				expr.ResolveIndices(p.tableSchema)
 			}
 		}
+		for _, expr := range p.GenCols.Setlist {
+			expr.Expr.ResolveIndices(p.tableSchema)
+		}
 	}
 }
 
