@@ -801,6 +801,8 @@ func (b *planBuilder) buildInsert(insert *ast.InsertStmt) Plan {
 					Setlist: make([]*expression.Assignment, 0),
 				}
 			}
+			columnName := &ast.ColumnName{Name: column.Name}
+			columnName.SetText(column.Name.O)
 			expr, _, err := b.rewrite(column.GeneratedExpr, mockTablePlan, nil, true)
 			if err != nil {
 				b.err = errors.Trace(err)
@@ -808,14 +810,24 @@ func (b *planBuilder) buildInsert(insert *ast.InsertStmt) Plan {
 			}
 			// here we only store the expression, we'll eval that in executor.
 			if len(insertPlan.Columns) != 0 {
-				columnName := &ast.ColumnName{Name: column.Name}
-				columnName.SetText(column.Name.O)
+				// for insert ... values (...).
 				insertPlan.GenCols.Columns = append(insertPlan.GenCols.Columns, columnName)
 				for i, exprList := range insertPlan.GenCols.Lists {
 					insertPlan.GenCols.Lists[i] = append(exprList, expr)
 				}
-			} else {
+			} else if len(insertPlan.Setlist) != 0 {
 				// for insert ... setlist.
+				colNameExpr := &ast.ColumnNameExpr{Name: columnName}
+				colExpr, _, err := b.rewrite(colNameExpr, mockTablePlan, nil, true)
+				if err != nil {
+					b.err = errors.Trace(err)
+					return nil
+				}
+				assign := &expression.Assignment{
+					Col:  colExpr.(*expression.Column),
+					Expr: expr,
+				}
+				insertPlan.GenCols.Setlist = append(insertPlan.GenCols.Setlist, assign)
 			}
 		}
 	}

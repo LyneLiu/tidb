@@ -732,7 +732,11 @@ func (e *InsertValues) getColumns(tableCols []*table.Column) ([]*table.Column, e
 		for _, v := range e.Setlist {
 			columns = append(columns, v.Col.ColName.O)
 		}
-
+		if e.GenValues != nil {
+			for _, v := range e.GenValues.Setlist {
+				columns = append(columns, v.Col.ColName.O)
+			}
+		}
 		cols, err = table.FindCols(tableCols, columns)
 		if err != nil {
 			return nil, errors.Errorf("INSERT INTO %s: %s", e.Table.Meta().Name.O, err)
@@ -782,6 +786,16 @@ func (e *InsertValues) fillValueList() error {
 			l = append(l, v.Expr)
 		}
 		e.Lists = append(e.Lists, l)
+	}
+	if e.GenValues != nil && len(e.GenValues.Setlist) > 0 {
+		if len(e.GenValues.Lists) > 0 {
+			return errors.Errorf("INSERT INTO %s: set type should not use values", e.Table)
+		}
+		l := make([]expression.Expression, 0, len(e.GenValues.Setlist))
+		for _, v := range e.GenValues.Setlist {
+			l = append(l, v.Expr)
+		}
+		e.GenValues.Lists = append(e.GenValues.Lists, l)
 	}
 	return nil
 }
